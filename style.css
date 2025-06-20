@@ -1,0 +1,166 @@
+/* 小猫2D射击游戏样式文件 */
+
+/* 基础样式 */
+body {
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    font-family: 'Comic Sans MS', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* 游戏容器 */
+.game-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+/* 标题 */
+h1 {
+    color: #fff;
+    text-align: center;
+    margin: 0 0 20px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-size: 2.2em;
+}
+
+/* 游戏画布 */
+canvas {
+    border: 3px solid #fff;
+    border-radius: 15px;
+    background: #2c5530;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    cursor: crosshair;
+}
+
+/* 游戏信息栏 */
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+/* 控制说明 */
+.controls {
+    text-align: center;
+    color: #fff;
+    margin-top: 15px;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+/* 游戏结束界面 */
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 1000;
+}
+
+/* 重新开始按钮 */
+.restart-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+.restart-btn:hover {
+    background: #c0392b;
+    transform: scale(1.05);
+}
+
+/* 武器信息栏 */
+.weapon-info {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 0.9em;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.pulse {
+    animation: pulse 0.5s ease;
+}
+
+/* 响应式设计 */
+@media (max-width: 900px) {
+    canvas {
+        width: 90vw;
+        height: auto;
+    }
+    
+    .game-container {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+    
+    .weapon-info {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: 10px;
+    }
+}
+
+/* 按钮悬停效果 */
+button {
+    transition: all 0.2s ease;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* 游戏界面元素动画 */
+.game-info > div {
+    transition: all 0.3s ease;
+}
+
+.game-info > div:hover {
+    transform: scale(1.05);
+}
+
+/* 加载动画 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.game-container {
+    animation: fadeIn 0.5s ease-out;
+}

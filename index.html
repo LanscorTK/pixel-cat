@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>喵喵喵喵喵喵喵喵！</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>🐱 小猫战场 🎯</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="game-info">
+            <div>分数: <span id="score">0</span></div>
+            <div>击杀: <span id="kills">0</span></div>
+            <div>生命: <span id="lives">❤️❤️❤️</span></div>
+            <div>波次: <span id="wave">1</span></div>
+        </div>
+        <div class="controls">
+            WASD/方向键 移动 | 鼠标瞄准 | 鼠标左键/空格 射击 | 按住空格连射！
+        </div>
+    </div>
+
+    <div class="weapon-info">
+        <div>武器: <span id="weaponType">🔫 基础枪</span></div>
+        <div>弹药: <span id="ammo">∞</span></div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>🎮 游戏结束 🎮</h2>
+        <p>最终分数: <span id="finalScore">0</span></p>
+        <p>消灭敌人: <span id="finalKills">0</span></p>
+        <p>存活波次: <span id="finalWave">1</span></p>
+        <button class="restart-btn" onclick="restartGame()">重新开始</button>
+    </div>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="script.js"></script>
+</body>
+</html>
