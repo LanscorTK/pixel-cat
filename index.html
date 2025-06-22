@@ -2,39 +2,331 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>喵喵喵喵喵喵喵喵！</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🐱 小猫战场 🔫</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
-        <h1>🐱 小猫战场 🎯</h1>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <!-- 主菜单界面 -->
+    <div class="main-menu" id="mainMenu">
+        <div class="menu-container">
+            <!-- 游戏标题 -->
+            <div class="game-title">
+                <h1>🐱 小猫战场</h1>
+                <p class="subtitle">Cat Battle Arena</p>
+                <div class="platform-badge" id="platformBadge">电脑版</div>
+            </div>
+
+            <!-- 主菜单按钮 -->
+            <div class="menu-buttons">
+                <button class="menu-btn primary" onclick="showDifficultySelect()">
+                    🎯 开始游戏
+                </button>
+                <button class="menu-btn" onclick="showSettings()">
+                    ⚙️ 游戏设置
+                </button>
+                <button class="menu-btn" onclick="showControls()">
+                    🎮 操作说明
+                </button>
+                <button class="menu-btn" onclick="showAbout()">
+                    ℹ️ 关于游戏
+                </button>
+            </div>
+
+            <!-- 版本信息 -->
+            <div class="version-info">
+                <p>响应式版本 v2.0 | 支持电脑和手机</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 难度选择界面 -->
+    <div class="difficulty-menu" id="difficultyMenu" style="display: none;">
+        <div class="menu-container">
+            <h2>🎯 选择难度</h2>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn easy" onclick="startGame('easy')">
+                    <div class="difficulty-icon">😸</div>
+                    <div class="difficulty-name">简单</div>
+                    <div class="difficulty-desc">敌人较少，移动较慢<br>适合新手玩家</div>
+                </button>
+                
+                <button class="difficulty-btn normal" onclick="startGame('normal')">
+                    <div class="difficulty-icon">😼</div>
+                    <div class="difficulty-name">普通</div>
+                    <div class="difficulty-desc">标准难度，平衡挑战<br>推荐大多数玩家</div>
+                </button>
+                
+                <button class="difficulty-btn hard" onclick="startGame('hard')">
+                    <div class="difficulty-icon">😾</div>
+                    <div class="difficulty-name">困难</div>
+                    <div class="difficulty-desc">敌人众多，反应要快<br>适合有经验玩家</div>
+                </button>
+                
+                <button class="difficulty-btn extreme" onclick="startGame('extreme')">
+                    <div class="difficulty-icon">🙀</div>
+                    <div class="difficulty-name">极限</div>
+                    <div class="difficulty-desc">地狱模式，生存挑战<br>只有高手能通关</div>
+                </button>
+            </div>
+            
+            <button class="back-btn" onclick="showMainMenu()">⬅️ 返回主菜单</button>
+        </div>
+    </div>
+
+    <!-- 设置界面 -->
+    <div class="settings-menu" id="settingsMenu" style="display: none;">
+        <div class="menu-container">
+            <h2>⚙️ 游戏设置</h2>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label>画质设置</label>
+                    <select id="qualitySelect" onchange="updateQuality()">
+                        <option value="high">高画质（更多特效）</option>
+                        <option value="medium" selected>中画质（推荐）</option>
+                        <option value="low">低画质（性能优先）</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label>音效设置</label>
+                    <select id="soundSelect" onchange="updateSound()">
+                        <option value="on">开启音效</option>
+                        <option value="off" selected>关闭音效</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label>背景音乐</label>
+                    <select id="musicSelect" onchange="updateMusic()">
+                        <option value="on">开启音乐</option>
+                        <option value="off" selected>关闭音乐</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label>屏幕震动</label>
+                    <select id="vibrateSelect" onchange="updateVibrate()">
+                        <option value="on" selected>开启震动</option>
+                        <option value="off">关闭震动</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label>显示FPS</label>
+                    <select id="fpsSelect" onchange="updateFPS()">
+                        <option value="on">显示FPS</option>
+                        <option value="off" selected>隐藏FPS</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="back-btn" onclick="showMainMenu()">⬅️ 返回主菜单</button>
+        </div>
+    </div>
+
+    <!-- 操作说明界面 -->
+    <div class="controls-menu" id="controlsMenu" style="display: none;">
+        <div class="menu-container">
+            <h2>🎮 操作说明</h2>
+            <div class="controls-content">
+                <div class="control-section" id="desktopControlsSection">
+                    <h3>🖥️ 电脑版操作</h3>
+                    <div class="control-item">
+                        <span class="key">W A S D</span>
+                        <span class="action">移动小猫</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="key">方向键</span>
+                        <span class="action">移动小猫</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="key">鼠标移动</span>
+                        <span class="action">瞄准方向</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="key">鼠标左键</span>
+                        <span class="action">射击</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="key">空格键</span>
+                        <span class="action">连续射击</span>
+                    </div>
+                </div>
+                
+                <div class="control-section" id="mobileControlsSection">
+                    <h3>📱 手机版操作</h3>
+                    <div class="control-item">
+                        <span class="key">左侧摇杆</span>
+                        <span class="action">移动小猫</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="key">点击屏幕</span>
+                        <span class="action">朝点击位置射击</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="key">右下角🔥按钮</span>
+                        <span class="action">自动瞄准连射</span>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🎯 游戏目标</h3>
+                    <ul>
+                        <li>消灭所有敌人完成波次</li>
+                        <li>收集道具获得强力武器</li>
+                        <li>避免被敌人碰触</li>
+                        <li>挑战更高波次和分数</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <button class="back-btn" onclick="showMainMenu()">⬅️ 返回主菜单</button>
+        </div>
+    </div>
+
+    <!-- 关于界面 -->
+    <div class="about-menu" id="aboutMenu" style="display: none;">
+        <div class="menu-container">
+            <h2>ℹ️ 关于游戏</h2>
+            <div class="about-content">
+                <div class="about-section">
+                    <h3>🐱 小猫战场</h3>
+                    <p>一款萌萌的射击游戏，控制勇敢的小猫战士抵御外星入侵者！</p>
+                </div>
+                
+                <div class="about-section">
+                    <h3>✨ 游戏特色</h3>
+                    <ul>
+                        <li>🎯 精准的射击系统</li>
+                        <li>🔫 多种强力武器</li>
+                        <li>👾 丰富的敌人类型</li>
+                        <li>📱 完美的手机适配</li>
+                        <li>🎮 响应式游戏体验</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3>🛠️ 技术信息</h3>
+                    <ul>
+                        <li>使用 HTML5 Canvas 技术</li>
+                        <li>响应式设计，支持所有设备</li>
+                        <li>纯前端实现，无需服务器</li>
+                        <li>开源项目，持续更新</li>
+                    </ul>
+                </div>
+                
+                <div class="about-section">
+                    <h3>🎉 版本历史</h3>
+                    <ul>
+                        <li>v2.0 - 响应式设计，统一代码库</li>
+                        <li>v1.5 - 添加手机版支持</li>
+                        <li>v1.0 - 基础游戏功能</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <button class="back-btn" onclick="showMainMenu()">⬅️ 返回主菜单</button>
+        </div>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div class="game-container" id="gameContainer">
+        <!-- 游戏标题栏 -->
+        <div class="game-header">
+            <div class="game-title-bar">
+                <span>🐱 小猫战场 - <span id="currentDifficulty">普通</span>模式</span>
+                <button class="pause-btn" onclick="pauseGame()">⏸️</button>
+            </div>
+        </div>
+
+        <!-- 游戏画布 -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- 游戏信息 -->
         <div class="game-info">
             <div>分数: <span id="score">0</span></div>
             <div>击杀: <span id="kills">0</span></div>
-            <div>生命: <span id="lives">❤️❤️❤️</span></div>
+            <div>❤️ <span id="lives">3</span></div>
             <div>波次: <span id="wave">1</span></div>
         </div>
-        <div class="controls">
-            WASD/方向键 移动 | 鼠标瞄准 | 鼠标左键/空格 射击 | 按住空格连射！
+
+        <!-- 武器信息 -->
+        <div class="weapon-info">
+            <div id="weaponType">🔫 基础枪</div>
+        </div>
+
+        <!-- FPS显示 -->
+        <div class="fps-counter" id="fpsCounter" style="display: none;">
+            FPS: <span id="fpsValue">60</span>
+        </div>
+
+        <!-- 电脑版控制说明 -->
+        <div class="desktop-controls" id="desktopControls">
+            WASD/方向键 移动 | 鼠标瞄准 | 鼠标左键/空格 射击 | ESC 暂停
+        </div>
+
+        <!-- 手机版控制说明 -->
+        <div class="mobile-instructions" id="mobileInstructions">
+            左侧摇杆移动 | 点击屏幕射击 | 右下角连射按钮
+        </div>
+
+        <!-- 手机控制界面 -->
+        <div class="mobile-controls" id="mobileControls">
+            <!-- 虚拟摇杆 -->
+            <div class="joystick-container" id="joystickContainer">
+                <div class="joystick-base"></div>
+                <div class="joystick-stick" id="joystickStick"></div>
+            </div>
+
+            <!-- 射击按钮 -->
+            <div class="shoot-button" id="shootButton">🔥</div>
         </div>
     </div>
 
-    <div class="weapon-info">
-        <div>武器: <span id="weaponType">🔫 基础枪</span></div>
-        <div>弹药: <span id="ammo">∞</span></div>
+    <!-- 暂停菜单 -->
+    <div class="pause-menu" id="pauseMenu" style="display: none;">
+        <div class="menu-container">
+            <h2>⏸️ 游戏暂停</h2>
+            <div class="pause-buttons">
+                <button class="menu-btn primary" onclick="resumeGame()">
+                    ▶️ 继续游戏
+                </button>
+                <button class="menu-btn" onclick="restartCurrentGame()">
+                    🔄 重新开始
+                </button>
+                <button class="menu-btn" onclick="exitToMenu()">
+                    🏠 回到主菜单
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="game-over" id="gameOver">
-        <h2>🎮 游戏结束 🎮</h2>
-        <p>最终分数: <span id="finalScore">0</span></p>
-        <p>消灭敌人: <span id="finalKills">0</span></p>
-        <p>存活波次: <span id="finalWave">1</span></p>
-        <button class="restart-btn" onclick="restartGame()">重新开始</button>
+    <!-- 游戏结束界面 -->
+    <div class="game-over" id="gameOver" style="display: none;">
+        <div class="menu-container">
+            <h2>🎮 游戏结束 🎮</h2>
+            <div class="game-over-stats">
+                <p>最终分数: <span id="finalScore">0</span></p>
+                <p>消灭敌人: <span id="finalKills">0</span></p>
+                <p>存活波次: <span id="finalWave">1</span></p>
+                <p>游戏难度: <span id="finalDifficulty">普通</span></p>
+            </div>
+            <div class="game-over-buttons">
+                <button class="menu-btn primary" onclick="restartGame()">
+                    🔄 再来一局
+                </button>
+                <button class="menu-btn" onclick="showDifficultySelect()">
+                    🎯 选择难度
+                </button>
+                <button class="menu-btn" onclick="exitToMenu()">
+                    🏠 回到主菜单
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- 引入JavaScript文件 -->
+    <script src="audio.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
