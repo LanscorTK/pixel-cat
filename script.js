@@ -804,6 +804,9 @@ function setupJoystickControls() {
     const joystickStick = document.getElementById('joystickStick');
 
     function handleJoystickStart(e) {
+        // 只在游戏中处理摇杆
+        if (currentState !== GAME_STATES.PLAYING) return;
+        
         e.preventDefault();
         e.stopPropagation();
         
@@ -860,6 +863,9 @@ function setupJoystickControls() {
     }
 
     function handleJoystickEnd(e) {
+        // 只在游戏中处理摇杆结束
+        if (currentState !== GAME_STATES.PLAYING) return;
+        
         e.preventDefault();
         e.stopPropagation();
         
@@ -890,6 +896,9 @@ function setupTouchControls() {
     const shootButton = document.getElementById('shootButton');
 
     function handleShootStart(e) {
+        // 只在游戏中处理射击
+        if (currentState !== GAME_STATES.PLAYING) return;
+        
         e.preventDefault();
         e.stopPropagation();
         
@@ -909,6 +918,9 @@ function setupTouchControls() {
     }
 
     function handleShootEnd(e) {
+        // 只在游戏中处理射击结束
+        if (currentState !== GAME_STATES.PLAYING) return;
+        
         e.preventDefault();
         e.stopPropagation();
         
