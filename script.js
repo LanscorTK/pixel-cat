@@ -765,25 +765,38 @@ function setupDesktopControls() {
 }
 
 function setupMobileControls() {
+    // 🔧 修复：只在游戏进行中阻止滚动，菜单中允许正常点击
+    setupGameTouchPrevention();
     setupJoystickControls();
     setupTouchControls();
-    
-    // 防止页面滚动和缩放
+}
+
+// 🔧 新增：更智能的触摸事件阻止逻辑
+function setupGameTouchPrevention() {
+    // 只在游戏进行中阻止页面滚动
     document.addEventListener('touchmove', (e) => {
-        e.preventDefault();
+        // 只在游戏进行时阻止滚动
+        if (currentState === GAME_STATES.PLAYING) {
+            e.preventDefault();
+        }
     }, { passive: false });
     
+    // 防止双指缩放（但允许单指点击）
     document.addEventListener('touchstart', (e) => {
-        // 防止双击缩放
+        // 只阻止多点触摸的缩放，保留单点触摸的按钮点击
         if (e.touches.length > 1) {
             e.preventDefault();
         }
     }, { passive: false });
     
-    // 防止长按选择文本
+    // 只在游戏中防止文本选择
     document.addEventListener('selectstart', (e) => {
-        e.preventDefault();
+        if (currentState === GAME_STATES.PLAYING) {
+            e.preventDefault();
+        }
     });
+    
+    console.log('📱 智能触摸事件管理已设置');
 }
 
 function setupJoystickControls() {
@@ -811,8 +824,11 @@ function setupJoystickControls() {
     }
 
     function handleJoystickMove(e) {
-        e.preventDefault();
-        e.stopPropagation();
+        // 只在游戏中阻止事件传播
+        if (currentState === GAME_STATES.PLAYING) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         
         if (!joystick.active || joystickTouchId === null) return;
         
@@ -862,10 +878,12 @@ function setupJoystickControls() {
         }
     }
 
-    joystickContainer.addEventListener('touchstart', handleJoystickStart, { passive: false });
-    document.addEventListener('touchmove', handleJoystickMove, { passive: false });
-    document.addEventListener('touchend', handleJoystickEnd, { passive: false });
-    document.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
+    if (joystickContainer) {
+        joystickContainer.addEventListener('touchstart', handleJoystickStart, { passive: false });
+        document.addEventListener('touchmove', handleJoystickMove, { passive: false });
+        document.addEventListener('touchend', handleJoystickEnd, { passive: false });
+        document.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
+    }
 }
 
 function setupTouchControls() {
@@ -906,35 +924,45 @@ function setupTouchControls() {
         }
     }
 
-    shootButton.addEventListener('touchstart', handleShootStart, { passive: false });
-    document.addEventListener('touchend', handleShootEnd, { passive: false });
-    document.addEventListener('touchcancel', handleShootEnd, { passive: false });
+    if (shootButton) {
+        shootButton.addEventListener('touchstart', handleShootStart, { passive: false });
+        document.addEventListener('touchend', handleShootEnd, { passive: false });
+        document.addEventListener('touchcancel', handleShootEnd, { passive: false });
+    }
 
     // 画布点击射击（独立处理）
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        
-        if (currentState === GAME_STATES.PLAYING) {
+    if (canvas) {
+        canvas.addEventListener('touchstart', (e) => {
+            // 只在游戏中处理画布触摸
+            if (currentState !== GAME_STATES.PLAYING) return;
+            
+            e.preventDefault();
+            
             // 只处理不是摇杆和射击按钮的触摸
             const touch = e.touches[0];
-            const joystickRect = document.getElementById('joystickContainer').getBoundingClientRect();
-            const shootRect = document.getElementById('shootButton').getBoundingClientRect();
+            const joystickContainer = document.getElementById('joystickContainer');
+            const shootButton = document.getElementById('shootButton');
             
-            const isJoystickTouch = touch.clientX >= joystickRect.left && touch.clientX <= joystickRect.right &&
-                                  touch.clientY >= joystickRect.top && touch.clientY <= joystickRect.bottom;
-            
-            const isShootTouch = touch.clientX >= shootRect.left && touch.clientX <= shootRect.right &&
-                                touch.clientY >= shootRect.top && touch.clientY <= shootRect.bottom;
-            
-            if (!isJoystickTouch && !isShootTouch) {
-                const rect = canvas.getBoundingClientRect();
-                const touchX = touch.clientX - rect.left;
-                const touchY = touch.clientY - rect.top;
-                shootTowards(touchX, touchY);
-                console.log('🎯 画布点击射击');
+            if (joystickContainer && shootButton) {
+                const joystickRect = joystickContainer.getBoundingClientRect();
+                const shootRect = shootButton.getBoundingClientRect();
+                
+                const isJoystickTouch = touch.clientX >= joystickRect.left && touch.clientX <= joystickRect.right &&
+                                      touch.clientY >= joystickRect.top && touch.clientY <= joystickRect.bottom;
+                
+                const isShootTouch = touch.clientX >= shootRect.left && touch.clientX <= shootRect.right &&
+                                    touch.clientY >= shootRect.top && touch.clientY <= shootRect.bottom;
+                
+                if (!isJoystickTouch && !isShootTouch) {
+                    const rect = canvas.getBoundingClientRect();
+                    const touchX = touch.clientX - rect.left;
+                    const touchY = touch.clientY - rect.top;
+                    shootTowards(touchX, touchY);
+                    console.log('🎯 画布点击射击');
+                }
             }
-        }
-    }, { passive: false });
+        }, { passive: false });
+    }
 }
 
 /* ==================== 工具函数 ==================== */
@@ -1795,12 +1823,12 @@ window.disableTouchDebug = function() {
     console.log('🐛 触摸调试模式已关闭');
 };
 
-console.log('🔧 设备检测和触摸控制已完全修复！');
+console.log('🔧 移动端菜单点击问题已修复！');
 console.log('✅ 修复内容:');
-console.log('- 🎯 精确的设备检测逻辑');
-console.log('- 📱 正确的手机/平板识别');
-console.log('- 🕹️ 独立的触摸事件处理');
-console.log('- 📐 动态的控制元素尺寸调整');
-console.log('- 🍎 优化的iPad控制位置');
+console.log('- 🎯 智能触摸事件管理，菜单中允许正常点击');
+console.log('- 📱 只在游戏中阻止滚动和文本选择');
+console.log('- 🕹️ 优化的触摸控制逻辑');
+console.log('- 📐 安全的空值检查');
+console.log('- 🍎 iPad和手机的完美支持');
 console.log('🎮 调试快捷键: I - 查看波次信息, K - 清理敌人');
 console.log('🐛 调试命令: enableTouchDebug() / disableTouchDebug()');
