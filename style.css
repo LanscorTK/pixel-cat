@@ -1,34 +1,3 @@
-/* 游戏界面的UI元素默认隐藏 */
-.game-container .game-header,
-.game-container .game-info,
-.game-container .weapon-info,
-.game-container .fps-counter,
-.game-container .desktop-controls,
-.game-container .mobile-instructions,
-.game-container .mobile-controls {
-    display: none;
-}
-
-/* 游戏进行时显示UI */
-.game-container.playing .game-header,
-.game-container.playing .game-info,
-.game-container.playing .weapon-info {
-    display: block;
-}
-
-/* 根据设备类型显示对应控制界面 */
-body:not(.mobile-mode) .game-container.playing .desktop-controls {
-    display: block;
-}
-
-body.mobile-mode .game-container.playing .mobile-instructions {
-    display: block;
-}
-
-body.mobile-mode .game-container.playing .mobile-controls {
-    display: flex;
-}/* 响应式小猫射击游戏 - 完整样式文件 */
-
 /* ==================== 基础重置和全局样式 ==================== */
 
 * {
@@ -72,6 +41,46 @@ body::before {
     66% { transform: translateX(20px) translateY(-10px); }
 }
 
+/* ==================== 设备特定样式 ==================== */
+
+/* iPad 专用样式 */
+body.tablet-mode {
+    font-size: 1.1em;
+}
+
+body.tablet-mode .menu-btn {
+    min-width: 280px;
+    padding: 18px 35px;
+    font-size: 1.2rem;
+}
+
+body.tablet-mode .game-title h1 {
+    font-size: 4.5rem;
+}
+
+body.tablet-mode .difficulty-icon {
+    font-size: 3.5rem;
+}
+
+body.tablet-mode .difficulty-name {
+    font-size: 1.4rem;
+}
+
+body.tablet-mode .game-info {
+    font-size: 1.3rem;
+}
+
+/* 手机专用样式 */
+body.phone-mode .menu-btn {
+    min-width: 240px;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+}
+
+body.phone-mode .game-title h1 {
+    font-size: 3rem;
+}
+
 /* ==================== 通用菜单容器 ==================== */
 
 .menu-container {
@@ -80,11 +89,11 @@ body::before {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    width: 100%;           /* 添加宽度 */
-    max-width: 800px;      /* 限制最大宽度 */
+    width: 100%;
+    max-width: 900px;
     padding: 20px;
     text-align: center;
-    margin: 0 auto;        /* 水平居中 */
+    margin: 0 auto;
 }
 
 /* ==================== 主菜单样式 ==================== */
@@ -93,11 +102,11 @@ body::before {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;          /* 确保占满整个视窗宽度 */
-    height: 100vh;         /* 确保占满整个视窗高度 */
+    width: 100vw;
+    height: 100vh;
     z-index: 1000;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* 添加背景 */
-    display: flex;         /* 确保flex布局 */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
     justify-content: center;
     align-items: center;
 }
@@ -154,7 +163,7 @@ body::before {
     min-width: 250px;
 }
 
-.menu-btn:hover {
+.menu-btn:hover, .menu-btn:active {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.6);
     transform: translateY(-2px);
@@ -167,7 +176,7 @@ body::before {
     font-weight: bold;
 }
 
-.menu-btn.primary:hover {
+.menu-btn.primary:hover, .menu-btn.primary:active {
     background: linear-gradient(45deg, #ff5252, #ff3838);
     box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
 }
@@ -201,7 +210,7 @@ body::before {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 40px;
-    max-width: 800px;
+    max-width: 900px;
 }
 
 .difficulty-btn {
@@ -216,22 +225,34 @@ body::before {
     text-align: center;
 }
 
-.difficulty-btn:hover {
+.difficulty-btn:hover, .difficulty-btn:active {
     transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 .difficulty-btn.easy { border-color: #2ecc71; }
-.difficulty-btn.easy:hover { background: rgba(46, 204, 113, 0.2); box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3); }
+.difficulty-btn.easy:hover, .difficulty-btn.easy:active { 
+    background: rgba(46, 204, 113, 0.2); 
+    box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3); 
+}
 
 .difficulty-btn.normal { border-color: #3498db; }
-.difficulty-btn.normal:hover { background: rgba(52, 152, 219, 0.2); box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3); }
+.difficulty-btn.normal:hover, .difficulty-btn.normal:active { 
+    background: rgba(52, 152, 219, 0.2); 
+    box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3); 
+}
 
 .difficulty-btn.hard { border-color: #e67e22; }
-.difficulty-btn.hard:hover { background: rgba(230, 126, 34, 0.2); box-shadow: 0 10px 25px rgba(230, 126, 34, 0.3); }
+.difficulty-btn.hard:hover, .difficulty-btn.hard:active { 
+    background: rgba(230, 126, 34, 0.2); 
+    box-shadow: 0 10px 25px rgba(230, 126, 34, 0.3); 
+}
 
 .difficulty-btn.extreme { border-color: #e74c3c; }
-.difficulty-btn.extreme:hover { background: rgba(231, 76, 60, 0.2); box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3); }
+.difficulty-btn.extreme:hover, .difficulty-btn.extreme:active { 
+    background: rgba(231, 76, 60, 0.2); 
+    box-shadow: 0 10px 25px rgba(231, 76, 60, 0.3); 
+}
 
 .difficulty-icon {
     font-size: 3rem;
@@ -261,7 +282,7 @@ body::before {
     backdrop-filter: blur(10px);
 }
 
-.back-btn:hover {
+.back-btn:hover, .back-btn:active {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
 }
@@ -289,7 +310,7 @@ body::before {
     padding: 30px;
     backdrop-filter: blur(15px);
     margin-bottom: 30px;
-    max-width: 600px;
+    max-width: 700px;
 }
 
 .setting-item {
@@ -409,6 +430,37 @@ body::before {
     position: relative;
 }
 
+/* 游戏界面的UI元素默认隐藏 */
+.game-container .game-header,
+.game-container .game-info,
+.game-container .weapon-info,
+.game-container .fps-counter,
+.game-container .desktop-controls,
+.game-container .mobile-instructions,
+.game-container .mobile-controls {
+    display: none;
+}
+
+/* 游戏进行时显示UI */
+.game-container.playing .game-header,
+.game-container.playing .game-info,
+.game-container.playing .weapon-info {
+    display: block;
+}
+
+/* 根据设备类型显示对应控制界面 */
+body:not(.mobile-mode) .game-container.playing .desktop-controls {
+    display: block;
+}
+
+body.mobile-mode .game-container.playing .mobile-instructions {
+    display: block;
+}
+
+body.mobile-mode .game-container.playing .mobile-controls {
+    display: flex;
+}
+
 .game-header {
     background: rgba(0, 0, 0, 0.8);
     color: white;
@@ -434,7 +486,7 @@ body::before {
     transition: all 0.3s ease;
 }
 
-.pause-btn:hover {
+.pause-btn:hover, .pause-btn:active {
     background: rgba(255, 255, 255, 0.3);
 }
 
@@ -534,8 +586,8 @@ canvas {
 }
 
 .joystick-base {
-    width: 80px;
-    height: 80px;
+    width: 100%;
+    height: 100%;
     border: 3px solid rgba(255, 255, 255, 0.5);
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
@@ -543,8 +595,8 @@ canvas {
 }
 
 .joystick-stick {
-    width: 40px;
-    height: 40px;
+    width: 50%;
+    height: 50%;
     background: rgba(255, 255, 255, 0.8);
     border-radius: 50%;
     position: absolute;
@@ -626,8 +678,8 @@ canvas {
 
 /* ==================== 响应式设计 ==================== */
 
-/* 平板和大屏幕 */
-@media (min-width: 768px) {
+/* iPad Portrait (768px) */
+@media (min-width: 768px) and (max-width: 1024px) {
     .game-title h1 {
         font-size: 4rem;
     }
@@ -640,28 +692,56 @@ canvas {
     }
     
     .menu-btn {
-        min-width: 200px;
+        min-width: 220px;
     }
     
     .difficulty-buttons {
         grid-template-columns: repeat(2, 1fr);
-        max-width: 600px;
+        max-width: 700px;
     }
     
     .game-info {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
     
     .weapon-info, .fps-counter {
         font-size: 1rem;
     }
     
-    .desktop-controls {
-        font-size: 1rem;
+    .mobile-controls {
+        height: 100px;
+        padding: 8px 15px;
+    }
+    
+    .joystick-container, .shoot-button {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .mobile-instructions {
+        bottom: 110px;
+        font-size: 0.9rem;
     }
 }
 
-/* 大屏幕电脑 */
+/* iPad Landscape (1024px) */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    .difficulty-buttons {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 1000px;
+    }
+    
+    .mobile-controls {
+        height: 90px;
+    }
+    
+    .joystick-container, .shoot-button {
+        width: 85px;
+        height: 85px;
+    }
+}
+
+/* 大屏幕平板和电脑 */
 @media (min-width: 1200px) {
     .game-title h1 {
         font-size: 5rem;
@@ -669,16 +749,16 @@ canvas {
     
     .difficulty-buttons {
         grid-template-columns: repeat(4, 1fr);
-        max-width: 1000px;
+        max-width: 1200px;
     }
     
     .game-info {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
     }
 }
 
 /* 小屏幕手机优化 */
-@media (max-height: 600px) {
+@media (max-width: 480px) {
     .game-title h1 {
         font-size: 2.5rem;
         margin-bottom: 5px;
@@ -715,16 +795,6 @@ canvas {
     .joystick-container, .shoot-button {
         width: 70px;
         height: 70px;
-    }
-    
-    .joystick-base {
-        width: 70px;
-        height: 70px;
-    }
-    
-    .joystick-stick {
-        width: 35px;
-        height: 35px;
     }
     
     .mobile-instructions {
@@ -867,5 +937,32 @@ body.mobile-mode canvas {
     
     body::before {
         animation: none;
+    }
+}
+
+/* iPad Pro 特殊优化 */
+@media (min-width: 1024px) and (max-width: 1366px) {
+    body.tablet-mode .menu-btn {
+        min-width: 320px;
+        padding: 20px 40px;
+        font-size: 1.3rem;
+    }
+    
+    body.tablet-mode .game-title h1 {
+        font-size: 5rem;
+    }
+    
+    body.tablet-mode .game-info {
+        font-size: 1.4rem;
+    }
+    
+    body.tablet-mode .mobile-controls {
+        height: 110px;
+    }
+    
+    body.tablet-mode .joystick-container,
+    body.tablet-mode .shoot-button {
+        width: 100px;
+        height: 100px;
     }
 }
