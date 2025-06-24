@@ -35,7 +35,7 @@
 
             <!-- 版本信息 -->
             <div class="version-info">
-                <p>响应式版本 v2.0 | 支持电脑和手机</p>
+                <p>响应式版本 v2.1 | 修复设备检测和触摸控制</p>
             </div>
         </div>
     </div>
@@ -219,6 +219,7 @@
                 <div class="about-section">
                     <h3>🎉 版本历史</h3>
                     <ul>
+                        <li>v2.1 - 修复设备检测和触摸控制冲突</li>
                         <li>v2.0 - 响应式设计，统一代码库</li>
                         <li>v1.5 - 添加手机版支持</li>
                         <li>v1.0 - 基础游戏功能</li>
@@ -271,7 +272,7 @@
             左侧摇杆移动 | 点击屏幕射击 | 右下角连射按钮
         </div>
 
-        <!-- 手机控制界面 -->
+        <!-- 修复后的手机控制界面 -->
         <div class="mobile-controls" id="mobileControls">
             <!-- 虚拟摇杆 -->
             <div class="joystick-container" id="joystickContainer">
@@ -326,7 +327,155 @@
         </div>
     </div>
 
+    <!-- 调试信息显示（可选） -->
+    <div class="debug-touch-info" id="debugTouchInfo">
+        <div>设备: <span id="debugDevice">-</span></div>
+        <div>摇杆: <span id="debugJoystick">-</span></div>
+        <div>射击: <span id="debugShoot">-</span></div>
+        <div>触摸: <span id="debugTouch">-</span></div>
+    </div>
+
+    <!-- 加载脚本 -->
     <script src="audio.js"></script>
     <script src="script.js"></script>
-</body> 
+    
+    <!-- 可选的调试脚本 -->
+    <script>
+        // 全局调试函数
+        window.enableTouchDebug = function() {
+            document.body.classList.add('debug-mode');
+            const debugInfo = document.getElementById('debugTouchInfo');
+            const debugDevice = document.getElementById('debugDevice');
+            const debugJoystick = document.getElementById('debugJoystick');
+            const debugShoot = document.getElementById('debugShoot');
+            const debugTouch = document.getElementById('debugTouch');
+            
+            function updateDebugInfo() {
+                if (debugDevice && typeof IS_IPAD !== 'undefined') {
+                    debugDevice.textContent = IS_IPAD ? 'iPad' : (IS_PHONE ? 'Phone' : 'Desktop');
+                }
+                if (debugJoystick && typeof joystick !== 'undefined') {
+                    debugJoystick.textContent = `${joystick.x.toFixed(2)}, ${joystick.y.toFixed(2)}`;
+                }
+                if (debugShoot && typeof touch !== 'undefined') {
+                    debugShoot.textContent = touch.shootButtonPressed ? 'ON' : 'OFF';
+                }
+                if (debugTouch && typeof joystickTouchId !== 'undefined' && typeof shootButtonTouchId !== 'undefined') {
+                    debugTouch.textContent = `IDs: J=${joystickTouchId || 'none'}, S=${shootButtonTouchId || 'none'}`;
+                }
+            }
+            
+            const debugInterval = setInterval(updateDebugInfo, 100);
+            
+            // 保存间隔ID以便后续清理
+            window.debugInterval = debugInterval;
+            
+            console.log('🐛 触摸调试模式已启用');
+            console.log('📱 设备信息:', {
+                isMobile: typeof IS_MOBILE !== 'undefined' ? IS_MOBILE : 'unknown',
+                isPhone: typeof IS_PHONE !== 'undefined' ? IS_PHONE : 'unknown',
+                isTablet: typeof IS_TABLET !== 'undefined' ? IS_TABLET : 'unknown',
+                isIPad: typeof IS_IPAD !== 'undefined' ? IS_IPAD : 'unknown'
+            });
+        };
+
+        window.disableTouchDebug = function() {
+            document.body.classList.remove('debug-mode');
+            if (window.debugInterval) {
+                clearInterval(window.debugInterval);
+                window.debugInterval = null;
+            }
+            console.log('🐛 触摸调试模式已关闭');
+        };
+        
+        // 添加额外的调试函数
+        window.logDeviceInfo = function() {
+            console.log('🔍 完整设备信息:');
+            console.log('User Agent:', navigator.userAgent);
+            console.log('Screen Size:', window.innerWidth + 'x' + window.innerHeight);
+            console.log('Touch Support:', 'ontouchstart' in window);
+            console.log('Max Touch Points:', navigator.maxTouchPoints);
+            console.log('Platform:', navigator.platform);
+            if (typeof deviceInfo !== 'undefined') {
+                console.table(deviceInfo);
+            }
+        };
+        
+        window.testTouchControls = function() {
+            if (typeof IS_MOBILE !== 'undefined' && IS_MOBILE) {
+                console.log('🧪 测试触摸控制:');
+                
+                const joystick = document.getElementById('joystickContainer');
+                const shootBtn = document.getElementById('shootButton');
+                
+                if (joystick) {
+                    const rect = joystick.getBoundingClientRect();
+                    console.log('🕹️ 摇杆位置:', {
+                        x: rect.left,
+                        y: rect.top,
+                        width: rect.width,
+                        height: rect.height
+                    });
+                }
+                
+                if (shootBtn) {
+                    const rect = shootBtn.getBoundingClientRect();
+                    console.log('🔥 射击按钮位置:', {
+                        x: rect.left,
+                        y: rect.top,
+                        width: rect.width,
+                        height: rect.height
+                    });
+                }
+            } else {
+                console.log('📺 当前为桌面模式，无触摸控制');
+            }
+        };
+        
+        // 页面加载完成后的额外设置
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加控制台欢迎信息
+            console.log('%c🐱 小猫战场 v2.1', 'font-size: 20px; color: #ff6b6b; font-weight: bold;');
+            console.log('%c🔧 调试命令可用:', 'font-size: 14px; color: #3498db;');
+            console.log('• enableTouchDebug() - 启用触摸调试');
+            console.log('• disableTouchDebug() - 关闭触摸调试');
+            console.log('• logDeviceInfo() - 显示设备信息');
+            console.log('• testTouchControls() - 测试触摸控制位置');
+            
+            // 监听页面可见性变化（移动端优化）
+            document.addEventListener('visibilitychange', function() {
+                if (typeof currentState !== 'undefined' && currentState === 'playing') {
+                    if (document.hidden) {
+                        console.log('📱 页面隐藏，建议暂停游戏');
+                    } else {
+                        console.log('📱 页面重新可见');
+                        // 移动端恢复音频上下文
+                        if (window.audioManager) {
+                            audioManager.resumeAudioContext();
+                        }
+                    }
+                }
+            });
+            
+            // 移动端特殊处理
+            if (/mobile/i.test(navigator.userAgent)) {
+                // 防止iOS Safari的回弹效果
+                document.body.style.overscrollBehavior = 'none';
+                
+                // 防止意外的页面刷新
+                let startY = 0;
+                document.addEventListener('touchstart', function(e) {
+                    startY = e.touches[0].clientY;
+                });
+                
+                document.addEventListener('touchmove', function(e) {
+                    if (e.touches[0].clientY > startY && window.scrollY === 0) {
+                        // 在页面顶部下拉时阻止刷新
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
+        });
+    </script>
+</body>
 </html>
