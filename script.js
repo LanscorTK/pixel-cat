@@ -1,29 +1,56 @@
 /* ==================== 全局配置和状态管理 ==================== */
 
-// 设备检测
+// 修复后的设备检测
 function detectDevice() {
     const userAgent = navigator.userAgent.toLowerCase();
-    const isIOS = /ipad|iphone|ipod/.test(userAgent);
-    const isAndroid = /android/.test(userAgent);
     const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
     
-    // iPad 特殊检测（包括 iPad Pro）
+    // iOS设备检测
+    const isIOS = /ipad|iphone|ipod/.test(userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    // Android设备检测
+    const isAndroid = /android/.test(userAgent);
+    
+    // iPad检测（更精确的方法）
     const isIPad = /ipad/.test(userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-                  (userAgent.includes('mac') && hasTouch);
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                   (isIOS && Math.min(screenWidth, screenHeight) >= 768);
     
-    // 平板检测（包括 iPad）
-    const isTablet = isIPad || 
-                    (isAndroid && !/mobile/.test(userAgent)) ||
-                    window.innerWidth >= 768;
+    // iPhone检测
+    const isIPhone = /iphone/.test(userAgent) && !isIPad;
     
-    // 手机检测
-    const isPhone = (isIOS && !isIPad) || 
-                   (isAndroid && /mobile/.test(userAgent)) ||
-                   (hasTouch && window.innerWidth < 768);
+    // Android平板检测
+    const isAndroidTablet = isAndroid && !/mobile/.test(userAgent) && 
+                           Math.min(screenWidth, screenHeight) >= 600;
     
-    // 最终移动设备判断（包括手机和平板）
+    // 综合平板判断
+    const isTablet = isIPad || isAndroidTablet;
+    
+    // 手机判断（修复后的逻辑）
+    const isPhone = (isIPhone || 
+                    (isAndroid && /mobile/.test(userAgent)) ||
+                    (hasTouch && !isTablet && Math.min(screenWidth, screenHeight) < 768));
+    
+    // 移动设备总判断
     const isMobile = hasTouch && (isPhone || isTablet);
+    
+    // 调试信息
+    console.log('🔍 详细设备检测:', {
+        userAgent: userAgent,
+        hasTouch: hasTouch,
+        screenSize: `${screenWidth}x${screenHeight}`,
+        isIOS: isIOS,
+        isAndroid: isAndroid,
+        isIPad: isIPad,
+        isIPhone: isIPhone,
+        isAndroidTablet: isAndroidTablet,
+        isTablet: isTablet,
+        isPhone: isPhone,
+        isMobile: isMobile
+    });
     
     return {
         isDesktop: !isMobile,
@@ -34,8 +61,8 @@ function detectDevice() {
         isIOS: isIOS,
         isAndroid: isAndroid,
         hasTouch: hasTouch,
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight
+        screenWidth: screenWidth,
+        screenHeight: screenHeight
     };
 }
 
@@ -57,9 +84,9 @@ function getDeviceSpecificSettings() {
             enemySize: 28,
             bulletSize: 6,
             uiScale: 1.2,
-            controlsHeight: 100,
-            joystickSize: 90,
-            shootButtonSize: 90
+            controlsHeight: 140, // 增加控制区域高度
+            joystickSize: 100,   // 增大摇杆
+            shootButtonSize: 100 // 增大射击按钮
         };
     } else if (IS_PHONE) {
         return {
@@ -67,9 +94,9 @@ function getDeviceSpecificSettings() {
             enemySize: 22,
             bulletSize: 5,
             uiScale: 1.0,
-            controlsHeight: 120,
-            joystickSize: 80,
-            shootButtonSize: 80
+            controlsHeight: 130, // 稍微增加高度
+            joystickSize: 85,    // 适中的摇杆大小
+            shootButtonSize: 85  // 适中的射击按钮
         };
     } else {
         return {
@@ -118,7 +145,7 @@ let fpsCounter = {
     fps: 60
 };
 
-/* ==================== 修复后的难度配置系统 ==================== */
+/* ==================== 修固后的难度配置系统 ==================== */
 
 const difficultyConfigs = {
     easy: {
@@ -471,7 +498,7 @@ function exitToMenu() {
     console.log('🏠 返回主菜单');
 }
 
-/* ==================== 设备界面设置 ==================== */
+/* ==================== 修复后的设备界面设置 ==================== */
 
 function setupDeviceInterface() {
     const platformBadge = document.getElementById('platformBadge');
@@ -485,20 +512,51 @@ function setupDeviceInterface() {
         mobileInstructions.style.display = 'block';
         desktopControls.style.display = 'none';
         document.body.classList.add('mobile-mode', 'tablet-mode');
-        console.log('🍎 iPad 模式已启用');
+        
+        // iPad特殊调整
+        mobileControls.style.height = deviceSettings.controlsHeight + 'px';
+        console.log('🍎 iPad 模式已启用 - 控制高度:', deviceSettings.controlsHeight);
+        
     } else if (IS_PHONE) {
         platformBadge.textContent = '手机版';
         mobileControls.style.display = 'flex';
         mobileInstructions.style.display = 'block';
         desktopControls.style.display = 'none';
         document.body.classList.add('mobile-mode', 'phone-mode');
-        console.log('📱 手机模式已启用');
+        
+        // 手机特殊调整
+        mobileControls.style.height = deviceSettings.controlsHeight + 'px';
+        console.log('📱 手机模式已启用 - 控制高度:', deviceSettings.controlsHeight);
+        
     } else {
         platformBadge.textContent = '电脑版';
         mobileControls.style.display = 'none';
         mobileInstructions.style.display = 'none';
         desktopControls.style.display = 'block';
         console.log('🖥️ 电脑模式已启用');
+    }
+    
+    // 调整摇杆和射击按钮大小
+    if (IS_MOBILE) {
+        const joystickContainer = document.getElementById('joystickContainer');
+        const shootButton = document.getElementById('shootButton');
+        
+        if (joystickContainer) {
+            joystickContainer.style.width = deviceSettings.joystickSize + 'px';
+            joystickContainer.style.height = deviceSettings.joystickSize + 'px';
+        }
+        
+        if (shootButton) {
+            shootButton.style.width = deviceSettings.shootButtonSize + 'px';
+            shootButton.style.height = deviceSettings.shootButtonSize + 'px';
+            shootButton.style.fontSize = (deviceSettings.shootButtonSize * 0.3) + 'px';
+        }
+        
+        console.log('📐 控制元素大小已调整:', {
+            摇杆: deviceSettings.joystickSize,
+            射击按钮: deviceSettings.shootButtonSize,
+            控制区高度: deviceSettings.controlsHeight
+        });
     }
 }
 
@@ -512,10 +570,21 @@ function resizeCanvas() {
     if (IS_MOBILE) {
         const headerHeight = 50;
         const controlsHeight = deviceSettings.controlsHeight;
-        const availableHeight = window.innerHeight - headerHeight - controlsHeight;
+        const instructionsHeight = IS_MOBILE ? 30 : 0; // 指令文字的高度
+        const totalUIHeight = headerHeight + controlsHeight + instructionsHeight;
+        const availableHeight = window.innerHeight - totalUIHeight;
         
         canvas.width = window.innerWidth;
         canvas.height = Math.max(availableHeight, 300); // 确保最小高度
+        
+        console.log('📱 移动端画布调整:', {
+            屏幕高度: window.innerHeight,
+            头部高度: headerHeight,
+            控制高度: controlsHeight,
+            指令高度: instructionsHeight,
+            可用高度: availableHeight,
+            实际画布高度: canvas.height
+        });
     } else {
         const maxWidth = Math.min(window.innerWidth, 1200);
         const availableHeight = window.innerHeight - 90;
@@ -546,6 +615,10 @@ let joystick = {
     centerY: deviceSettings.joystickSize / 2
 };
 let touch = { shootButtonPressed: false };
+
+// 触摸ID追踪（修复触摸冲突）
+let joystickTouchId = null;
+let shootButtonTouchId = null;
 
 // 游戏状态
 let gameState = {
@@ -626,7 +699,7 @@ const weaponTypes = {
     }
 };
 
-/* ==================== 事件监听器设置 ==================== */
+/* ==================== 修复后的事件监听器设置 ==================== */
 
 function setupEventListeners() {
     if (IS_MOBILE) {
@@ -695,9 +768,22 @@ function setupMobileControls() {
     setupJoystickControls();
     setupTouchControls();
     
+    // 防止页面滚动和缩放
     document.addEventListener('touchmove', (e) => {
         e.preventDefault();
     }, { passive: false });
+    
+    document.addEventListener('touchstart', (e) => {
+        // 防止双击缩放
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    // 防止长按选择文本
+    document.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+    });
 }
 
 function setupJoystickControls() {
@@ -706,67 +792,149 @@ function setupJoystickControls() {
 
     function handleJoystickStart(e) {
         e.preventDefault();
-        joystick.active = true;
+        e.stopPropagation();
+        
+        // 确保这是摇杆区域的触摸
         const rect = joystickContainer.getBoundingClientRect();
-        joystick.centerX = rect.left + rect.width / 2;
-        joystick.centerY = rect.top + rect.height / 2;
+        const touch = e.touches[0];
+        
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+            
+            joystickTouchId = touch.identifier;
+            joystick.active = true;
+            joystick.centerX = rect.left + rect.width / 2;
+            joystick.centerY = rect.top + rect.height / 2;
+            
+            console.log('🕹️ 摇杆激活');
+        }
     }
 
     function handleJoystickMove(e) {
-        if (!joystick.active) return;
         e.preventDefault();
+        e.stopPropagation();
         
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        if (!joystick.active || joystickTouchId === null) return;
         
-        const deltaX = clientX - joystick.centerX;
-        const deltaY = clientY - joystick.centerY;
-        const distance = Math.min(35, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
+        // 查找对应的触摸点
+        let targetTouch = null;
+        for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === joystickTouchId) {
+                targetTouch = e.touches[i];
+                break;
+            }
+        }
+        
+        if (!targetTouch) return;
+        
+        const deltaX = targetTouch.clientX - joystick.centerX;
+        const deltaY = targetTouch.clientY - joystick.centerY;
+        const maxDistance = 40; // 摇杆最大移动距离
+        const distance = Math.min(maxDistance, Math.sqrt(deltaX * deltaX + deltaY * deltaY));
         const angle = Math.atan2(deltaY, deltaX);
         
-        joystick.x = Math.cos(angle) * distance / 35;
-        joystick.y = Math.sin(angle) * distance / 35;
+        joystick.x = Math.cos(angle) * distance / maxDistance;
+        joystick.y = Math.sin(angle) * distance / maxDistance;
         
-        joystickStick.style.left = `${40 + joystick.x * 20}px`;
-        joystickStick.style.top = `${40 + joystick.y * 20}px`;
+        // 更新摇杆显示位置
+        const stickX = 50 + (joystick.x * 20); // 20是可视化偏移量
+        const stickY = 50 + (joystick.y * 20);
+        joystickStick.style.left = `${stickX}%`;
+        joystickStick.style.top = `${stickY}%`;
     }
 
     function handleJoystickEnd(e) {
         e.preventDefault();
-        joystick.active = false;
-        joystick.x = 0;
-        joystick.y = 0;
-        joystickStick.style.left = '50%';
-        joystickStick.style.top = '50%';
+        e.stopPropagation();
+        
+        // 检查是否是摇杆的触摸结束
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === joystickTouchId) {
+                joystickTouchId = null;
+                joystick.active = false;
+                joystick.x = 0;
+                joystick.y = 0;
+                joystickStick.style.left = '50%';
+                joystickStick.style.top = '50%';
+                console.log('🕹️ 摇杆释放');
+                break;
+            }
+        }
     }
 
-    joystickContainer.addEventListener('touchstart', handleJoystickStart);
-    joystickContainer.addEventListener('touchmove', handleJoystickMove);
-    joystickContainer.addEventListener('touchend', handleJoystickEnd);
+    joystickContainer.addEventListener('touchstart', handleJoystickStart, { passive: false });
+    document.addEventListener('touchmove', handleJoystickMove, { passive: false });
+    document.addEventListener('touchend', handleJoystickEnd, { passive: false });
+    document.addEventListener('touchcancel', handleJoystickEnd, { passive: false });
 }
 
 function setupTouchControls() {
     const shootButton = document.getElementById('shootButton');
 
-    shootButton.addEventListener('touchstart', (e) => {
+    function handleShootStart(e) {
         e.preventDefault();
-        touch.shootButtonPressed = true;
-    });
+        e.stopPropagation();
+        
+        const rect = shootButton.getBoundingClientRect();
+        const touch = e.touches[0];
+        
+        // 确保触摸在射击按钮范围内
+        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+            
+            shootButtonTouchId = touch.identifier;
+            touch.shootButtonPressed = true;
+            shootButton.classList.add('active');
+            
+            console.log('🔥 射击按钮激活');
+        }
+    }
 
-    shootButton.addEventListener('touchend', (e) => {
+    function handleShootEnd(e) {
         e.preventDefault();
-        touch.shootButtonPressed = false;
-    });
+        e.stopPropagation();
+        
+        // 检查是否是射击按钮的触摸结束
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === shootButtonTouchId) {
+                shootButtonTouchId = null;
+                touch.shootButtonPressed = false;
+                shootButton.classList.remove('active');
+                console.log('🔥 射击按钮释放');
+                break;
+            }
+        }
+    }
 
+    shootButton.addEventListener('touchstart', handleShootStart, { passive: false });
+    document.addEventListener('touchend', handleShootEnd, { passive: false });
+    document.addEventListener('touchcancel', handleShootEnd, { passive: false });
+
+    // 画布点击射击（独立处理）
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
+        
         if (currentState === GAME_STATES.PLAYING) {
-            const rect = canvas.getBoundingClientRect();
-            const touchX = e.touches[0].clientX - rect.left;
-            const touchY = e.touches[0].clientY - rect.top;
-            shootTowards(touchX, touchY);
+            // 只处理不是摇杆和射击按钮的触摸
+            const touch = e.touches[0];
+            const joystickRect = document.getElementById('joystickContainer').getBoundingClientRect();
+            const shootRect = document.getElementById('shootButton').getBoundingClientRect();
+            
+            const isJoystickTouch = touch.clientX >= joystickRect.left && touch.clientX <= joystickRect.right &&
+                                  touch.clientY >= joystickRect.top && touch.clientY <= joystickRect.bottom;
+            
+            const isShootTouch = touch.clientX >= shootRect.left && touch.clientX <= shootRect.right &&
+                                touch.clientY >= shootRect.top && touch.clientY <= shootRect.bottom;
+            
+            if (!isJoystickTouch && !isShootTouch) {
+                const rect = canvas.getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
+                shootTowards(touchX, touchY);
+                console.log('🎯 画布点击射击');
+            }
         }
-    });
+    }, { passive: false });
 }
 
 /* ==================== 工具函数 ==================== */
@@ -945,11 +1113,13 @@ function updatePlayer() {
     let dx = 0, dy = 0;
     
     if (IS_MOBILE) {
+        // 摇杆控制移动
         if (joystick.active || (Math.abs(joystick.x) > 0.1 || Math.abs(joystick.y) > 0.1)) {
             dx = joystick.x;
             dy = joystick.y;
         }
         
+        // 射击按钮自动瞄准
         if (touch.shootButtonPressed) {
             let nearestEnemy = null;
             let nearestDistance = Infinity;
@@ -967,6 +1137,7 @@ function updatePlayer() {
             }
         }
     } else {
+        // 电脑版控制保持不变
         if (keys['KeyW'] || keys['ArrowUp']) dy -= 1;
         if (keys['KeyS'] || keys['ArrowDown']) dy += 1;
         if (keys['KeyA'] || keys['ArrowLeft']) dx -= 1;
@@ -984,6 +1155,7 @@ function updatePlayer() {
         }
     }
     
+    // 应用移动
     player.x = Math.max(player.width/2, Math.min(canvas.width - player.width/2, player.x + dx * player.speed));
     player.y = Math.max(player.height/2, Math.min(canvas.height - player.height/2, player.y + dy * player.speed));
 
@@ -1586,11 +1758,49 @@ document.addEventListener('DOMContentLoaded', () => {
     gameLoop();
 });
 
-console.log('🔧 波次管理系统已修复！');
-console.log('📊 新特性:');
-console.log('- 🎯 确定性敌人生成');
-console.log('- ⚡ 强制生成机制');
-console.log('- 📈 动态生成概率');
-console.log('- 🔍 详细进度追踪');
-console.log('- 🍎 完善的iPad支持');
+/* ==================== 调试功能 ==================== */
+
+// 全局调试函数
+window.enableTouchDebug = function() {
+    document.body.classList.add('debug-mode');
+    console.log('🐛 触摸调试模式已启用');
+    
+    // 创建调试信息显示
+    if (!document.getElementById('debugTouchInfo')) {
+        const debugDiv = document.createElement('div');
+        debugDiv.id = 'debugTouchInfo';
+        debugDiv.className = 'debug-touch-info';
+        debugDiv.innerHTML = `
+            <div>设备: <span id="debugDevice">-</span></div>
+            <div>摇杆: <span id="debugJoystick">-</span></div>
+            <div>射击: <span id="debugShoot">-</span></div>
+            <div>触摸: <span id="debugTouch">-</span></div>
+        `;
+        document.body.appendChild(debugDiv);
+        
+        // 更新调试信息
+        setInterval(() => {
+            document.getElementById('debugDevice').textContent = IS_IPAD ? 'iPad' : (IS_PHONE ? 'Phone' : 'Desktop');
+            document.getElementById('debugJoystick').textContent = `${joystick.x.toFixed(2)}, ${joystick.y.toFixed(2)}`;
+            document.getElementById('debugShoot').textContent = touch.shootButtonPressed ? 'ON' : 'OFF';
+            document.getElementById('debugTouch').textContent = `IDs: J=${joystickTouchId || 'none'}, S=${shootButtonTouchId || 'none'}`;
+        }, 100);
+    }
+};
+
+window.disableTouchDebug = function() {
+    document.body.classList.remove('debug-mode');
+    const debugDiv = document.getElementById('debugTouchInfo');
+    if (debugDiv) debugDiv.remove();
+    console.log('🐛 触摸调试模式已关闭');
+};
+
+console.log('🔧 设备检测和触摸控制已完全修复！');
+console.log('✅ 修复内容:');
+console.log('- 🎯 精确的设备检测逻辑');
+console.log('- 📱 正确的手机/平板识别');
+console.log('- 🕹️ 独立的触摸事件处理');
+console.log('- 📐 动态的控制元素尺寸调整');
+console.log('- 🍎 优化的iPad控制位置');
 console.log('🎮 调试快捷键: I - 查看波次信息, K - 清理敌人');
+console.log('🐛 调试命令: enableTouchDebug() / disableTouchDebug()');
