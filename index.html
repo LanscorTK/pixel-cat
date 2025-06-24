@@ -468,9 +468,11 @@
                     startY = e.touches[0].clientY;
                 });
                 
-                document.addEventListener('touchmove', function(e) {
-                    if (e.touches[0].clientY > startY && window.scrollY === 0) {
-                        // 在页面顶部下拉时阻止刷新
+                // 仅在游戏进行中并且手指在画布区下拉时，才阻止默认滚动
+                document.addEventListener('touchmove', function (e) {
+                    const pullingDown =
+                        e.touches[0].clientY > startY && window.scrollY === 0;
+                    if (currentState === GAME_STATES.PLAYING && pullingDown) {
                         e.preventDefault();
                     }
                 }, { passive: false });
