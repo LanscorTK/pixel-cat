@@ -1,10 +1,90 @@
 /* ==================== 全局配置和状态管理 ==================== */
 
 // 设备检测
-const IS_MOBILE = (('ontouchstart' in window) ||
-                  (navigator.maxTouchPoints > 0) ||
-                  (navigator.msMaxTouchPoints > 0)) &&
-                  window.innerWidth <= 768;
+function detectDevice() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isIOS = /ipad|iphone|ipod/.test(userAgent);
+    const isAndroid = /android/.test(userAgent);
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // iPad 特殊检测（包括 iPad Pro）
+    const isIPad = /ipad/.test(userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                  (userAgent.includes('mac') && hasTouch);
+    
+    // 平板检测（包括 iPad）
+    const isTablet = isIPad || 
+                    (isAndroid && !/mobile/.test(userAgent)) ||
+                    window.innerWidth >= 768;
+    
+    // 手机检测
+    const isPhone = (isIOS && !isIPad) || 
+                   (isAndroid && /mobile/.test(userAgent)) ||
+                   (hasTouch && window.innerWidth < 768);
+    
+    // 最终移动设备判断（包括手机和平板）
+    const isMobile = hasTouch && (isPhone || isTablet);
+    
+    return {
+        isDesktop: !isMobile,
+        isMobile: isMobile,
+        isPhone: isPhone,
+        isTablet: isTablet,
+        isIPad: isIPad,
+        isIOS: isIOS,
+        isAndroid: isAndroid,
+        hasTouch: hasTouch,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+    };
+}
+
+// 获取设备信息
+const deviceInfo = detectDevice();
+const IS_MOBILE = deviceInfo.isMobile;
+const IS_TABLET = deviceInfo.isTablet;
+const IS_IPAD = deviceInfo.isIPad;
+const IS_PHONE = deviceInfo.isPhone;
+
+// 打印设备信息用于调试
+console.log('🔍 设备检测结果:', deviceInfo);
+
+// 根据设备类型调整游戏参数
+function getDeviceSpecificSettings() {
+    if (IS_IPAD) {
+        return {
+            playerSize: 35,
+            enemySize: 28,
+            bulletSize: 6,
+            uiScale: 1.2,
+            controlsHeight: 100,
+            joystickSize: 90,
+            shootButtonSize: 90
+        };
+    } else if (IS_PHONE) {
+        return {
+            playerSize: 25,
+            enemySize: 22,
+            bulletSize: 5,
+            uiScale: 1.0,
+            controlsHeight: 120,
+            joystickSize: 80,
+            shootButtonSize: 80
+        };
+    } else {
+        return {
+            playerSize: 30,
+            enemySize: 25,
+            bulletSize: 6,
+            uiScale: 1.0,
+            controlsHeight: 0,
+            joystickSize: 0,
+            shootButtonSize: 0
+        };
+    }
+}
+
+const deviceSettings = getDeviceSpecificSettings();
 
 // 游戏状态枚举
 const GAME_STATES = {
@@ -38,54 +118,128 @@ let fpsCounter = {
     fps: 60
 };
 
-/* ==================== 难度配置系统 ==================== */
+/* ==================== 修复后的难度配置系统 ==================== */
 
 const difficultyConfigs = {
     easy: {
         name: '简单',
-        playerSpeed: IS_MOBILE ? 3.0 : 3.5,
+        playerSpeed: IS_IPAD ? 3.2 : (IS_PHONE ? 3.0 : 3.5),
         enemySpeedMultiplier: 0.7,
-        enemySpawnRate: 0.012,
-        maxEnemies: IS_MOBILE ? 4 : 6,
-        enemiesPerWave: 4,
+        enemySpawnRate: 0.08,  // 提高生成速率
+        maxEnemies: IS_IPAD ? 4 : (IS_PHONE ? 3 : 5),
+        enemiesPerWave: 8,     // 设定每波敌人总数
         powerUpRate: 0.25,
         playerLives: 5,
-        damageMultiplier: 0.8
+        damageMultiplier: 0.8,
+        spawnInterval: 90      // 敌人生成间隔（帧数）
     },
     normal: {
         name: '普通',
-        playerSpeed: IS_MOBILE ? 2.5 : 3.0,
+        playerSpeed: IS_IPAD ? 2.8 : (IS_PHONE ? 2.5 : 3.0),
         enemySpeedMultiplier: 1.0,
-        enemySpawnRate: 0.020,
-        maxEnemies: IS_MOBILE ? 6 : 8,
-        enemiesPerWave: 6,
+        enemySpawnRate: 0.12,  // 提高生成速率
+        maxEnemies: IS_IPAD ? 5 : (IS_PHONE ? 4 : 6),
+        enemiesPerWave: 12,    // 设定每波敌人总数
         powerUpRate: 0.15,
         playerLives: 3,
-        damageMultiplier: 1.0
+        damageMultiplier: 1.0,
+        spawnInterval: 75      // 敌人生成间隔（帧数）
     },
     hard: {
         name: '困难',
-        playerSpeed: IS_MOBILE ? 2.2 : 2.8,
+        playerSpeed: IS_IPAD ? 2.5 : (IS_PHONE ? 2.2 : 2.8),
         enemySpeedMultiplier: 1.3,
-        enemySpawnRate: 0.030,
-        maxEnemies: IS_MOBILE ? 8 : 12,
-        enemiesPerWave: 8,
+        enemySpawnRate: 0.15,  // 提高生成速率
+        maxEnemies: IS_IPAD ? 6 : (IS_PHONE ? 5 : 8),
+        enemiesPerWave: 18,    // 设定每波敌人总数
         powerUpRate: 0.10,
         playerLives: 2,
-        damageMultiplier: 1.5
+        damageMultiplier: 1.5,
+        spawnInterval: 60      // 敌人生成间隔（帧数）
     },
     extreme: {
         name: '极限',
-        playerSpeed: IS_MOBILE ? 2.0 : 2.5,
+        playerSpeed: IS_IPAD ? 2.3 : (IS_PHONE ? 2.0 : 2.5),
         enemySpeedMultiplier: 1.8,
-        enemySpawnRate: 0.040,
-        maxEnemies: IS_MOBILE ? 12 : 18,
-        enemiesPerWave: 12,
+        enemySpawnRate: 0.20,  // 提高生成速率
+        maxEnemies: IS_IPAD ? 8 : (IS_PHONE ? 6 : 10),
+        enemiesPerWave: 25,    // 设定每波敌人总数
         powerUpRate: 0.08,
         playerLives: 1,
-        damageMultiplier: 2.0
+        damageMultiplier: 2.0,
+        spawnInterval: 45      // 敌人生成间隔（帧数）
     }
 };
+
+/* ==================== 新增：波次管理系统 ==================== */
+
+// 波次管理状态
+let waveManager = {
+    enemiesSpawned: 0,     // 当前波次已生成的敌人数量
+    enemiesKilled: 0,      // 当前波次已击杀的敌人数量
+    lastSpawnTime: 0,      // 上次生成敌人的时间
+    waveActive: false,     // 当前波次是否激活
+    nextWaveDelay: 0,      // 下一波开始的延迟
+    forceSpawnTimer: 0     // 强制生成计时器
+};
+
+// 初始化游戏时重置波次管理器
+function initializeWaveManager() {
+    const config = window.difficultyConfig || difficultyConfigs.normal;
+    waveManager = {
+        enemiesSpawned: 0,
+        enemiesKilled: 0,
+        lastSpawnTime: 0,
+        waveActive: true,
+        nextWaveDelay: 0,
+        forceSpawnTimer: 0
+    };
+    
+    gameState.enemiesThisWave = config.enemiesPerWave;
+    gameState.enemiesKilled = 0;
+    
+    console.log(`🌊 波次管理器初始化 - 第${gameState.wave}波需击杀${gameState.enemiesThisWave}个敌人`);
+}
+
+// 修改敌人死亡处理（在碰撞检测中调用）
+function onEnemyKilled() {
+    waveManager.enemiesKilled++;
+    gameState.kills++;
+    
+    console.log(`💀 敌人被击杀 (${waveManager.enemiesKilled}/${gameState.enemiesThisWave})`);
+}
+
+// 开始下一波
+function startNextWave() {
+    gameState.wave++;
+    gameState.waveComplete = false;
+    
+    const config = window.difficultyConfig || difficultyConfigs.normal;
+    
+    // 计算下一波的敌人数量（每3波增加一些敌人）
+    const baseEnemies = config.enemiesPerWave;
+    const additionalEnemies = Math.floor((gameState.wave - 1) / 3) * 2;
+    gameState.enemiesThisWave = baseEnemies + additionalEnemies;
+    
+    // 重置波次管理器
+    waveManager = {
+        enemiesSpawned: 0,
+        enemiesKilled: 0,
+        lastSpawnTime: Date.now(),
+        waveActive: true,
+        nextWaveDelay: 0,
+        forceSpawnTimer: 0
+    };
+    
+    console.log(`🌊 开始第${gameState.wave}波 - 需击杀 ${gameState.enemiesThisWave} 个敌人`);
+    
+    // 立即生成第一个敌人
+    if (enemies.length === 0) {
+        createEnemy();
+        waveManager.enemiesSpawned++;
+        waveManager.lastSpawnTime = Date.now();
+    }
+}
 
 /* ==================== 菜单管理系统 ==================== */
 
@@ -325,17 +479,26 @@ function setupDeviceInterface() {
     const mobileInstructions = document.getElementById('mobileInstructions');
     const desktopControls = document.getElementById('desktopControls');
     
-    if (IS_MOBILE) {
+    if (IS_IPAD) {
+        platformBadge.textContent = 'iPad版';
+        mobileControls.style.display = 'flex';
+        mobileInstructions.style.display = 'block';
+        desktopControls.style.display = 'none';
+        document.body.classList.add('mobile-mode', 'tablet-mode');
+        console.log('🍎 iPad 模式已启用');
+    } else if (IS_PHONE) {
         platformBadge.textContent = '手机版';
         mobileControls.style.display = 'flex';
         mobileInstructions.style.display = 'block';
         desktopControls.style.display = 'none';
-        document.body.classList.add('mobile-mode');
+        document.body.classList.add('mobile-mode', 'phone-mode');
+        console.log('📱 手机模式已启用');
     } else {
         platformBadge.textContent = '电脑版';
         mobileControls.style.display = 'none';
         mobileInstructions.style.display = 'none';
         desktopControls.style.display = 'block';
+        console.log('🖥️ 电脑模式已启用');
     }
 }
 
@@ -348,12 +511,17 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
     if (IS_MOBILE) {
         const headerHeight = 50;
-        const controlsHeight = window.innerHeight <= 600 ? 100 : 120;
+        const controlsHeight = deviceSettings.controlsHeight;
+        const availableHeight = window.innerHeight - headerHeight - controlsHeight;
+        
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - headerHeight - controlsHeight;
+        canvas.height = Math.max(availableHeight, 300); // 确保最小高度
     } else {
-        canvas.width = Math.min(window.innerWidth, 1200);
-        canvas.height = window.innerHeight - 90;
+        const maxWidth = Math.min(window.innerWidth, 1200);
+        const availableHeight = window.innerHeight - 90;
+        
+        canvas.width = maxWidth;
+        canvas.height = Math.max(availableHeight, 400); // 确保最小高度
     }
     
     if (typeof player !== 'undefined' && player.x) {
@@ -374,8 +542,8 @@ let joystick = {
     active: false,
     x: 0,
     y: 0,
-    centerX: 40,
-    centerY: 40
+    centerX: deviceSettings.joystickSize / 2,
+    centerY: deviceSettings.joystickSize / 2
 };
 let touch = { shootButtonPressed: false };
 
@@ -395,17 +563,17 @@ let gameState = {
 const player = {
     x: 0,
     y: 0,
-    width: IS_MOBILE ? 25 : 30,
-    height: IS_MOBILE ? 25 : 30,
-    speed: IS_MOBILE ? 2.5 : 3,
+    width: deviceSettings.playerSize,
+    height: deviceSettings.playerSize,
+    speed: IS_IPAD ? 2.8 : (IS_PHONE ? 2.5 : 3),
     maxLives: 3,
     shootCooldown: 0,
     angle: 0,
     weapon: {
         type: 'basic',
         damage: 1,
-        fireRate: IS_MOBILE ? 6 : 8,
-        bulletSpeed: IS_MOBILE ? 6 : 8
+        fireRate: IS_IPAD ? 7 : (IS_PHONE ? 6 : 8),
+        bulletSpeed: IS_IPAD ? 7 : (IS_PHONE ? 6 : 8)
     }
 };
 
@@ -416,18 +584,46 @@ let particles = [];
 
 // 配置数据
 const enemyTypes = [
-    { emoji: '👾', speed: IS_MOBILE ? 0.8 : 1.0, points: 10, health: 1, size: IS_MOBILE ? 22 : 25 },
-    { emoji: '🤖', speed: IS_MOBILE ? 0.6 : 0.8, points: 20, health: 2, size: IS_MOBILE ? 26 : 30 },
-    { emoji: '👹', speed: IS_MOBILE ? 1.0 : 1.2, points: 15, health: 1, size: IS_MOBILE ? 24 : 28 },
-    { emoji: '🐶', speed: IS_MOBILE ? 1.3 : 1.8, points: 30, health: 1, size: IS_MOBILE ? 18 : 20 },
-    { emoji: '😈', speed: IS_MOBILE ? 1.1 : 1.5, points: 25, health: 1, size: IS_MOBILE ? 20 : 22 }
+    { emoji: '👾', speed: IS_IPAD ? 0.9 : (IS_PHONE ? 0.8 : 1.0), points: 10, health: 1, size: deviceSettings.enemySize },
+    { emoji: '🤖', speed: IS_IPAD ? 0.7 : (IS_PHONE ? 0.6 : 0.8), points: 20, health: 2, size: deviceSettings.enemySize + 2 },
+    { emoji: '👹', speed: IS_IPAD ? 1.1 : (IS_PHONE ? 1.0 : 1.2), points: 15, health: 1, size: deviceSettings.enemySize + 1 },
+    { emoji: '🐶', speed: IS_IPAD ? 1.5 : (IS_PHONE ? 1.3 : 1.8), points: 30, health: 1, size: deviceSettings.enemySize - 2 },
+    { emoji: '😈', speed: IS_IPAD ? 1.3 : (IS_PHONE ? 1.1 : 1.5), points: 25, health: 1, size: deviceSettings.enemySize - 1 }
 ];
 
 const weaponTypes = {
-    basic: { name: '🔫 基础枪', damage: 1, fireRate: IS_MOBILE ? 6 : 8, bulletSpeed: IS_MOBILE ? 6 : 8, color: '#FFD700', type: 'basic' },
-    rapid: { name: '⚡ 速射枪', damage: 1, fireRate: 3, bulletSpeed: IS_MOBILE ? 8 : 10, color: '#00FFFF', type: 'rapid' },
-    heavy: { name: '💥 重机枪', damage: 3, fireRate: IS_MOBILE ? 10 : 12, bulletSpeed: IS_MOBILE ? 5 : 6, color: '#FF4500', type: 'heavy' },
-    spread: { name: '🌟 散弹枪', damage: 2, fireRate: IS_MOBILE ? 12 : 15, bulletSpeed: IS_MOBILE ? 6 : 7, color: '#FF69B4', type: 'spread' }
+    basic: { 
+        name: '🔫 基础枪', 
+        damage: 1, 
+        fireRate: IS_IPAD ? 7 : (IS_PHONE ? 6 : 8), 
+        bulletSpeed: IS_IPAD ? 7 : (IS_PHONE ? 6 : 8), 
+        color: '#FFD700', 
+        type: 'basic' 
+    },
+    rapid: { 
+        name: '⚡ 速射枪', 
+        damage: 1, 
+        fireRate: 3, 
+        bulletSpeed: IS_IPAD ? 9 : (IS_PHONE ? 8 : 10), 
+        color: '#00FFFF', 
+        type: 'rapid' 
+    },
+    heavy: { 
+        name: '💥 重机枪', 
+        damage: 3, 
+        fireRate: IS_IPAD ? 11 : (IS_PHONE ? 10 : 12), 
+        bulletSpeed: IS_IPAD ? 6 : (IS_PHONE ? 5 : 6), 
+        color: '#FF4500', 
+        type: 'heavy' 
+    },
+    spread: { 
+        name: '🌟 散弹枪', 
+        damage: 2, 
+        fireRate: IS_IPAD ? 14 : (IS_PHONE ? 12 : 15), 
+        bulletSpeed: IS_IPAD ? 7 : (IS_PHONE ? 6 : 7), 
+        color: '#FF69B4', 
+        type: 'spread' 
+    }
 };
 
 /* ==================== 事件监听器设置 ==================== */
@@ -445,6 +641,27 @@ function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.code === 'Escape' && currentState === GAME_STATES.PLAYING) {
             pauseGame();
+        }
+        
+        // 调试模式：按 'I' 键查看波次信息
+        if (e.code === 'KeyI' && currentState === GAME_STATES.PLAYING) {
+            console.log('🔍 当前波次状态:');
+            console.log(`波次: ${gameState.wave}`);
+            console.log(`击杀进度: ${waveManager.enemiesKilled}/${gameState.enemiesThisWave}`);
+            console.log(`生成进度: ${waveManager.enemiesSpawned}/${gameState.enemiesThisWave}`);
+            console.log(`场上敌人: ${enemies.length}`);
+            console.log(`波次激活: ${waveManager.waveActive}`);
+        }
+        
+        // 调试模式：按 'K' 键快速击杀所有敌人（测试用）
+        if (e.code === 'KeyK' && currentState === GAME_STATES.PLAYING) {
+            enemies.forEach(enemy => {
+                gameState.score += enemy.points;
+                onEnemyKilled();
+                createParticles(enemy.x, enemy.y, '#FF6B6B');
+            });
+            enemies = [];
+            console.log('💀 已清理所有敌人（调试模式）');
         }
     });
 }
@@ -633,8 +850,8 @@ function createBullet(x, y, angle) {
     bullets.push({
         x: x,
         y: y,
-        width: IS_MOBILE ? 5 : 6,
-        height: IS_MOBILE ? 5 : 6,
+        width: deviceSettings.bulletSize,
+        height: deviceSettings.bulletSize,
         speed: player.weapon.bulletSpeed,
         angle: angle,
         damage: player.weapon.damage,
@@ -705,7 +922,7 @@ function createParticles(x, y, color, count = IS_MOBILE ? 6 : 8) {
     }
 }
 
-/* ==================== 游戏逻辑更新 ==================== */
+/* ==================== 修复后的游戏逻辑更新 ==================== */
 
 function update() {
     if (currentState !== GAME_STATES.PLAYING || !gameState.gameRunning) return;
@@ -716,8 +933,11 @@ function update() {
     updatePowerUps();
     updateParticles();
     handleCollisions();
+    
+    // 使用新的波次管理系统
     manageWaves();
     spawnEnemies();
+    
     checkGameOver();
 }
 
@@ -806,9 +1026,11 @@ function updateParticles() {
     });
 }
 
+// 修复后的碰撞检测系统
 function handleCollisions() {
     const config = window.difficultyConfig || difficultyConfigs.normal;
     
+    // 子弹与敌人的碰撞
     bullets.forEach((bullet, bulletIndex) => {
         enemies.forEach((enemy, enemyIndex) => {
             if (checkCollision(bullet, enemy)) {
@@ -817,8 +1039,7 @@ function handleCollisions() {
                 
                 if (enemy.health <= 0) {
                     gameState.score += enemy.points;
-                    gameState.kills++;
-                    gameState.enemiesKilled++;
+                    onEnemyKilled(); // 调用新的击杀处理函数
                     createParticles(enemy.x, enemy.y, '#FF6B6B');
                     triggerVibration(50);
                     
@@ -844,6 +1065,7 @@ function handleCollisions() {
         });
     });
 
+    // 玩家与敌人的碰撞
     enemies.forEach((enemy, enemyIndex) => {
         if (checkCollision(player, enemy)) {
             gameState.lives--;
@@ -856,9 +1078,11 @@ function handleCollisions() {
             }
             
             enemies.splice(enemyIndex, 1);
+            // 注意：这里敌人消失但不算击杀，不调用 onEnemyKilled()
         }
     });
 
+    // 玩家与道具的碰撞
     powerUps.forEach((powerUp, powerUpIndex) => {
         if (checkCollision(player, powerUp)) {
             handlePowerUp(powerUp);
@@ -898,27 +1122,86 @@ function handlePowerUp(powerUp) {
     }
 }
 
+// 修复后的波次管理函数
 function manageWaves() {
-    if (gameState.enemiesKilled >= gameState.enemiesThisWave && enemies.length === 0) {
-        gameState.wave++;
-        gameState.enemiesKilled = 0;
+    // 检查当前波次是否完成
+    const allEnemiesSpawned = waveManager.enemiesSpawned >= gameState.enemiesThisWave;
+    const allEnemiesKilled = waveManager.enemiesKilled >= gameState.enemiesThisWave;
+    const noEnemiesLeft = enemies.length === 0;
+    
+    // 波次完成条件：所有应该生成的敌人都已生成，并且都被击杀，场上没有敌人
+    if (allEnemiesSpawned && allEnemiesKilled && noEnemiesLeft && waveManager.waveActive) {
+        console.log(`🎉 第${gameState.wave}波完成！击杀: ${waveManager.enemiesKilled}/${gameState.enemiesThisWave}`);
         
-        const config = window.difficultyConfig || difficultyConfigs.normal;
-        // 每波只增加1-2个敌人，而不是30%
-        gameState.enemiesThisWave += Math.floor(gameState.wave / 3) + 1;
-        
+        // 标记波次完成
+        waveManager.waveActive = false;
         gameState.waveComplete = true;
-        setTimeout(() => gameState.waveComplete = false, IS_MOBILE ? 1200 : 1500);
+        waveManager.nextWaveDelay = IS_MOBILE ? 120 : 150; // 2-2.5秒延迟
+        
+        // 播放波次完成音效
+        if (window.audioManager) {
+            audioManager.playWaveComplete();
+        }
+        
+        // 奖励分数
+        gameState.score += gameState.wave * 50;
+    }
+    
+    // 处理下一波开始
+    if (!waveManager.waveActive && waveManager.nextWaveDelay > 0) {
+        waveManager.nextWaveDelay--;
+        
+        if (waveManager.nextWaveDelay === 0) {
+            startNextWave();
+        }
     }
 }
 
+// 修复后的敌人生成函数
 function spawnEnemies() {
     const config = window.difficultyConfig || difficultyConfigs.normal;
-    const maxEnemies = Math.min(config.maxEnemies + Math.floor(gameState.wave / 3), config.maxEnemies * 2);
+    const currentTime = Date.now();
     
-    if (enemies.length < maxEnemies) {
-        if (Math.random() < config.enemySpawnRate + gameState.wave * 0.001) {
+    // 检查是否还需要生成敌人
+    const needMoreEnemies = waveManager.enemiesSpawned < gameState.enemiesThisWave;
+    const canSpawnMore = enemies.length < config.maxEnemies;
+    const timePassed = currentTime - waveManager.lastSpawnTime > (config.spawnInterval * 16.67); // 转换为毫秒
+    
+    // 强制生成机制：如果太久没有敌人，强制生成
+    if (enemies.length === 0 && needMoreEnemies) {
+        waveManager.forceSpawnTimer++;
+        if (waveManager.forceSpawnTimer > 60) { // 1秒后强制生成
             createEnemy();
+            waveManager.enemiesSpawned++;
+            waveManager.lastSpawnTime = currentTime;
+            waveManager.forceSpawnTimer = 0;
+            console.log(`⚡ 强制生成敌人 (${waveManager.enemiesSpawned}/${gameState.enemiesThisWave})`);
+            return;
+        }
+    } else {
+        waveManager.forceSpawnTimer = 0;
+    }
+    
+    // 正常生成逻辑
+    if (needMoreEnemies && canSpawnMore && timePassed) {
+        // 使用更可靠的生成概率
+        const spawnChance = config.enemySpawnRate;
+        const waveProgress = waveManager.enemiesSpawned / gameState.enemiesThisWave;
+        
+        // 根据波次进度调整生成概率，前期更容易生成
+        let adjustedChance = spawnChance;
+        if (waveProgress < 0.3) {
+            adjustedChance *= 1.5; // 前30%生成概率提高50%
+        } else if (waveProgress > 0.8) {
+            adjustedChance *= 2.0; // 后20%生成概率翻倍，加快节奏
+        }
+        
+        if (Math.random() < adjustedChance) {
+            createEnemy();
+            waveManager.enemiesSpawned++;
+            waveManager.lastSpawnTime = currentTime;
+            
+            console.log(`👾 生成敌人 (${waveManager.enemiesSpawned}/${gameState.enemiesThisWave}) 场上敌人:${enemies.length}`);
         }
     }
 }
@@ -1150,8 +1433,14 @@ function drawWaveComplete() {
         ctx.lineWidth = 2;
         
         const text = `第 ${gameState.wave} 波完成！`;
-        ctx.strokeText(text, canvas.width/2, canvas.height/2);
-        ctx.fillText(text, canvas.width/2, canvas.height/2);
+        const subText = `准备第 ${gameState.wave + 1} 波...`;
+        
+        ctx.strokeText(text, canvas.width/2, canvas.height/2 - 20);
+        ctx.fillText(text, canvas.width/2, canvas.height/2 - 20);
+        
+        ctx.font = `${fontSize * 0.6}px Arial`;
+        ctx.strokeText(subText, canvas.width/2, canvas.height/2 + 20);
+        ctx.fillText(subText, canvas.width/2, canvas.height/2 + 20);
     }
 }
 
@@ -1163,6 +1452,19 @@ function updateUI() {
     
     const weaponName = weaponTypes[player.weapon.type]?.name || player.weapon.name || '🔫 基础枪';
     document.getElementById('weaponType').textContent = weaponName;
+    
+    // 显示波次进度（当FPS开启时）
+    if (waveManager.waveActive && gameSettings.showFPS === 'on') {
+        const progressElement = document.getElementById('waveProgress');
+        if (progressElement) {
+            const killed = waveManager.enemiesKilled;
+            const total = gameState.enemiesThisWave;
+            const spawned = waveManager.enemiesSpawned;
+            const onField = enemies.length;
+            
+            progressElement.textContent = `第${gameState.wave}波: ${killed}/${total} 击杀 | ${spawned}/${total} 生成 | 场上: ${onField}`;
+        }
+    }
 }
 
 function updateFPSCounter() {
@@ -1188,7 +1490,7 @@ function initializeGame() {
         wave: 1,
         kills: 0,
         gameRunning: true,
-        enemiesThisWave: window.difficultyConfig?.enemiesPerWave || 6,
+        enemiesThisWave: window.difficultyConfig?.enemiesPerWave || 12,
         enemiesKilled: 0,
         waveComplete: false
     };
@@ -1203,10 +1505,30 @@ function initializeGame() {
     powerUps = [];
     particles = [];
     
+    // 初始化波次管理器
+    initializeWaveManager();
+    
     // 初始化星空背景
     initStars();
     
+    // 添加波次进度显示（调试用）
+    if (gameSettings.showFPS === 'on' && !document.getElementById('waveProgress')) {
+        const progressDiv = document.createElement('div');
+        progressDiv.id = 'waveProgress';
+        progressDiv.style.position = 'absolute';
+        progressDiv.style.top = '110px';
+        progressDiv.style.left = '15px';
+        progressDiv.style.color = 'white';
+        progressDiv.style.background = 'rgba(0, 0, 0, 0.5)';
+        progressDiv.style.padding = '5px 10px';
+        progressDiv.style.borderRadius = '5px';
+        progressDiv.style.fontSize = '0.8rem';
+        progressDiv.style.zIndex = '160';
+        document.getElementById('gameContainer').appendChild(progressDiv);
+    }
+    
     console.log('🎮 游戏初始化完成');
+    console.log(`🌊 第${gameState.wave}波开始 - 目标击杀: ${gameState.enemiesThisWave}`);
 }
 
 function restartGame() {
@@ -1263,3 +1585,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     gameLoop();
 });
+
+console.log('🔧 波次管理系统已修复！');
+console.log('📊 新特性:');
+console.log('- 🎯 确定性敌人生成');
+console.log('- ⚡ 强制生成机制');
+console.log('- 📈 动态生成概率');
+console.log('- 🔍 详细进度追踪');
+console.log('- 🍎 完善的iPad支持');
+console.log('🎮 调试快捷键: I - 查看波次信息, K - 清理敌人');
